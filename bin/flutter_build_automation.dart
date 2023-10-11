@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:pub_semver/pub_semver.dart';
 
 void main(List<String> arguments) {
@@ -8,37 +7,90 @@ void main(List<String> arguments) {
     exit(1);
   }
 
-  final novaVersao = arguments[0];
+  final selectedOption = selectVersionOption();
+  final versaoAtual = getCurrentVersion();
 
-  // Verifique se a nova versão é válida
-  // if (Version.parse(novaVersao)) {
-  //   print('A nova versão não é válida.');
-  //   exit(1);
-  // }
+  final updatedVersion = updateVersion(versaoAtual, selectedOption);
+  print('Versão atual: $versaoAtual');
+  print('Versão após atualização: $updatedVersion');
+}
 
-  // Atualize o pubspec.yaml com a nova versão
-  final pubspecFile = File('pubspec.yaml');
-  final pubspec = pubspecFile.readAsStringSync();
-  final linhas = pubspec.split('\n');
-  for (var i = 0; i < linhas.length; i++) {
-    if (linhas[i].contains('version:')) {
-      linhas[i] = 'version: $novaVersao';
-      break;
+int selectVersionOption() {
+  final options = ['Padrão', 'Major', 'Minor', 'Patch'];
+  var selectedOption = 0;
+
+  stdin.echoMode = false;
+  stdin.lineMode = false;
+
+  while (true) {
+    clearScreen();
+    print('Selecione uma opção:');
+
+    for (int i = 0; i < options.length; i++) {
+      final option = options[i];
+      final isSelected = i == selectedOption;
+      final arrow = isSelected ? '\x1B[32m • ' : '   ';
+      print('$arrow\x1B[37m${i + 1} - $option');
+    }
+
+    final key = stdin.readByteSync();
+
+    if (key == 27) {
+      stdin.readByteSync();
+      final arrowKey = stdin.readByteSync();
+
+      if (arrowKey == 65 && selectedOption > 0) {
+        // Seta para cima
+        selectedOption--;
+      } else if (arrowKey == 66 && selectedOption < options.length - 1) {
+        // Seta para baixo
+        selectedOption++;
+      }
+    } else if (key == 10) {
+      stdin.echoMode = true;
+      stdin.lineMode = true;
+      return selectedOption;
+    } else {
+      // Ignorar outras teclas
     }
   }
-  pubspecFile.writeAsStringSync(linhas.join('\n'));
+}
 
-  print('Versão atualizada para $novaVersao.');
+void clearScreen() {
+  print('\x1B[2J\x1B[0;0H');
+}
 
-  // Gere os APKs (substitua pelo seu próprio código)
-  // Você pode usar ferramentas como o Flutter para gerar APKs.
+String getCurrentVersion() {
+  final pubspecFile = File('pubspec.yaml');
+  final content = pubspecFile.readAsStringSync();
 
-  // Execute o processo para gerar APKs
-  final processo = Process.runSync('comando_para_gerar_apks', []);
+  final pattern = RegExp(r'version:\s+([0-9]+\.[0-9]+\.[0-9]+)');
+  final match = pattern.firstMatch(content);
 
-  if (processo.exitCode == 0) {
-    print('APKs gerados com sucesso.');
-  } else {
-    print('Erro ao gerar APKs.');
+  if (match != null) {
+    return match.group(1)!;
   }
+
+  throw Exception(
+      'Não foi possível encontrar a versão no arquivo pubspec.yaml.');
+}
+
+String updateVersion(String currentVersion, int category) {
+  Version version = Version.parse(currentVersion);
+
+  switch (category) {
+    case 1:
+      version = version.nextMajor;
+      break;
+    case 2:
+      version = version.nextMinor;
+      break;
+    case 3:
+      version = version.nextPatch;
+      break;
+    default:
+      break;
+  }
+
+  return version.toString();
 }
