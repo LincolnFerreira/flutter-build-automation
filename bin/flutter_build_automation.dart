@@ -1,18 +1,25 @@
 import 'dart:io';
+
+import 'package:args/args.dart';
 import 'package:pub_semver/pub_semver.dart';
 
-void main(List<String> arguments) {
-  if (arguments.length != 1) {
-    print('Uso: dart build_apks.dart <nova_versao>');
-    exit(1);
-  }
+import 'builder_apk.dart';
+import 'pubspack_util.dart';
 
+void main(List<String> arguments) {
   final selectedOption = selectVersionOption();
   final versaoAtual = getCurrentVersion();
-
   final updatedVersion = updateVersion(versaoAtual, selectedOption);
   print('Versão atual: $versaoAtual');
   print('Versão após atualização: $updatedVersion');
+  updatePubspecVersions(updatedVersion);
+  final argParser = ArgParser()..addOption('builder', abbr: 'b');
+
+  var params = argParser.parse(arguments);
+
+  if (params['builder']) {
+    gerarAPKs();
+  }
 }
 
 int selectVersionOption() {

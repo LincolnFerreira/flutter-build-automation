@@ -1,14 +1,15 @@
 name: flutter_build_automation
 description: A sample command-line application.
-version: 1.0.0
+version: 1.0.1
 # repository: https://github.com/my_org/my_repo
 
 environment:
-  sdk: ^3.1.0
+  sdk: ^2.18.5
 
 # Add regular dependencies here.
 dependencies:
   ansi_escapes: ^1.1.0
+  args: ^2.4.2
   pub_semver: ^2.1.4
   # path: ^1.8.0
 
